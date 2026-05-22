@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面试调度指挥官 | 多面试不撞车·自动备战日程</title>
+<meta name="description" content="同时面多家公司怕撞车？输入面试时间，秒出备战日程表+防撞车提醒。Java实习面试必备免费工具。">
+<meta name="keywords" content="面试时间管理,面试调度,多面试安排,面试日程,Java实习面试工具">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.6;padding:16px}
+.container{max-width:700px;margin:0 auto}
+h1{font-size:1.6em;color:#38bdf8;text-align:center;margin:10px 0}
+.subtitle{text-align:center;color:#94a3b8;margin-bottom:24px;font-size:0.9em}
+.card{background:#1e293b;border-radius:12px;padding:20px;margin:16px 0;border:1px solid #334155}
+label{display:block;color:#94a3b8;margin:8px 0 4px;font-size:0.9em}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:1em;margin-bottom:8px}
+input:focus{outline:none;border-color:#38bdf8}
+.btn{display:block;width:100%;padding:12px;border-radius:8px;border:none;font-size:1.1em;cursor:pointer;font-weight:bold;margin:8px 0;transition:all .2s}
+.btn-primary{background:#38bdf8;color:#0f172a}
+.btn-primary:hover{background:#7dd3fc}
+.btn-sm{width:auto;padding:6px 14px;font-size:0.85em;display:inline-block}
+.result{display:none;margin-top:16px}
+.timeline{position:relative;padding-left:24px;border-left:2px solid #38bdf8}
+.timeline-item{position:relative;margin:16px 0;padding:12px;background:#0f172a;border-radius:8px;border:1px solid #334155}
+.timeline-item::before{content:'';position:absolute;left:-30px;top:16px;width:10px;height:10px;background:#38bdf8;border-radius:50%}
+.conflict{border-color:#ef4444!important}
+.conflict::before{background:#ef4444!important}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.8em;margin:2px}
+.tag-green{background:rgba(74,222,128,0.2);color:#4ade80}
+.tag-red{background:rgba(248,113,113,0.2);color:#f87171}
+.tag-blue{background:rgba(56,189,248,0.2);color:#38bdf8}
+.tag-yellow{background:rgba(250,204,21,0.2);color:#facc15}
+.limit-warn{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:12px;border-radius:8px;text-align:center;margin:12px 0}
+.donate{text-align:center;margin:30px 0;padding:20px;background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:16px;border:2px solid #facc15}
+.donate p{color:#facc15;font-size:1.1em;margin-bottom:10px}
+.donate img{width:180px;border-radius:12px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.stat{flex:1;min-width:80px;text-align:center;padding:12px;background:#0f172a;border-radius:8px;border:1px solid #334155}
+.stat-value{font-size:1.5em;color:#38bdf8;font-weight:bold}
+.stat-label{font-size:0.8em;color:#64748b}
+.footer-nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:20px 0}
+.footer-nav a{color:#64748b;text-decoration:none;font-size:0.8em;padding:4px 10px;border-radius:12px;background:#1e293b}
+.footer-nav a:hover{color:#38bdf8}
+.remove-btn{background:none;border:none;color:#ef4444;cursor:pointer;float:right;font-size:0.9em}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🗓️ 面试调度指挥官</h1>
+<p class="subtitle">多面试不撞车 · 自动生成备战日程 · 免费版支持3个面试</p>
+
+<div id="interviewForm" class="card">
+<h3 style="color:#38bdf8;margin-bottom:12px">➕ 添加面试</h3>
+<label>公司名称</label>
+<input type="text" id="companyName" placeholder="例：美团">
+
+<label>面试日期</label>
+<input type="date" id="interviewDate">
+
+<label>面试时间</label>
+<input type="time" id="interviewTime">
+
+<label>面试轮次</label>
+<select id="roundType">
+<option value="一面">一面（技术面）</option>
+<option value="二面">二面（技术面）</option>
+<option value="HR面">HR面</option>
+<option value="终面">终面</option>
+<option value="笔试">笔试</option>
+</select>
+
+<button class="btn btn-primary" onclick="addInterview()">✅ 添加到调度表</button>
+<p id="limitMsg" style="color:#f87171;text-align:center;font-size:0.9em"></p>
+</div>
+
+<div id="resultArea" class="result">
+<div class="stats" id="statsArea"></div>
+<div class="timeline" id="timelineArea"></div>
+<div id="conflictArea"></div>
+</div>
+
+<div id="lockNotice" class="limit-warn" style="display:none">
+🔒 <strong>免费版最多3个面试。</strong>超过3个请赞赏解锁无限版（含备战日计划+面试复盘模板）。<br>
+<img src="../mm_facetoface_collect_qrcode_1779427130944.png" alt="赞赏码" style="width:140px;margin:8px;border-radius:8px">
+<p style="color:#94a3b8;font-size:0.8em">赞赏后自动解锁全部功能</p>
+</div>
+
+<div class="donate">
+<p>☕ 工具帮到你了？</p>
+<img src="../mm_facetoface_collect_qrcode_1779427130944.png" alt="微信赞赏码">
+<p style="font-size:0.8em;color:#64748b;margin-top:6px">微信扫码赞赏</p>
+</div>
+
+<div class="footer-nav">
+<a href="../arsenal/">🎯弹药库</a>
+<a href="../resume-builder/">📝简历</a>
+<a href="../interview-quiz/">☕题库</a>
+<a href="../interview-simulator/">🎯模拟器</a>
+<a href="../java-career-blog/">📚博客</a>
+</div>
+
+<p style="text-align:center;color:#64748b;font-size:0.7em;margin-top:16px">© 2026 Abyte-zym · 全部工具免费+开放赞赏</p>
+</div>
+
+<script>
+let interviews = [];
+const MAX_FREE = 3;
+
+function addInterview() {
+    if (interviews.length >= MAX_FREE) {
+        document.getElementById('lockNotice').style.display = 'block';
+        document.getElementById('limitMsg').textContent = '已达免费上限(3个)';
+        return;
+    }
+    
+    const name = document.getElementById('companyName').value.trim();
+    const date = document.getElementById('interviewDate').value;
+    const time = document.getElementById('interviewTime').value;
+    const round = document.getElementById('roundType').value;
+    
+    if (!name || !date || !time) {
+        document.getElementById('limitMsg').textContent = '请填写完整信息';
+        return;
+    }
+    
+    interviews.push({ name, datetime: new Date(date + 'T' + time), round });
+    interviews.sort((a, b) => a.datetime - b.datetime);
+    
+    document.getElementById('companyName').value = '';
+    document.getElementById('limitMsg').textContent = '';
+    document.getElementById('lockNotice').style.display = 'none';
+    
+    renderSchedule();
+}
+
+function renderSchedule() {
+    const area = document.getElementById('resultArea');
+    if (interviews.length === 0) { area.style.display = 'none'; return; }
+    area.style.display = 'block';
+    
+    // Stats
+    document.getElementById('statsArea').innerHTML = `
+        <div class="stat"><div class="stat-value">${interviews.length}</div><div class="stat-label">调度面试</div></div>
+        <div class="stat"><div class="stat-value">${detectConflicts().length}</div><div class="stat-label">⚠️时间冲突</div></div>
+        <div class="stat"><div class="stat-value">${Math.max(0, MAX_FREE - interviews.length)}</div><div class="stat-label">剩余名额</div></div>
+    `;
+    
+    // Timeline
+    const conflicts = detectConflicts();
+    document.getElementById('timelineArea').innerHTML = interviews.map((iv, i) => `
+        <div class="timeline-item ${conflicts.includes(i) ? 'conflict' : ''}">
+            <button class="remove-btn" onclick="removeInterview(${i})">✕</button>
+            <strong style="color:#38bdf8;font-size:1.1em">${iv.name}</strong>
+            <span class="tag tag-${iv.round === 'HR面' ? 'green' : iv.round === '终面' ? 'yellow' : 'blue'}">${iv.round}</span>
+            ${conflicts.includes(i) ? '<span class="tag tag-red">⚠️时间冲突</span>' : ''}
+            <div style="color:#94a3b8;margin-top:4px">
+                📅 ${iv.datetime.toLocaleDateString('zh-CN', {month:'long',day:'numeric',weekday:'short'})} 
+                🕐 ${iv.datetime.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})}
+            </div>
+            ${getPrepAdvice(iv)}
+        </div>
+    `).join('');
+}
+
+function detectConflicts() {
+    const result = [];
+    for (let i = 0; i < interviews.length - 1; i++) {
+        const diff = (interviews[i+1].datetime - interviews[i].datetime) / 3600000; // hours
+        if (diff < 2) { result.push(i); result.push(i+1); }
+    }
+    return [...new Set(result)];
+}
+
+function getPrepAdvice(iv) {
+    const daysUntil = Math.ceil((iv.datetime - new Date()) / 86400000);
+    if (daysUntil < 0) return '';
+    if (daysUntil <= 1) return '<div class="tag tag-yellow">⏰ 明天面试！今晚过一遍速查卡</div>';
+    if (daysUntil <= 3) return '<div class="tag tag-yellow">📋 倒计时'+daysUntil+'天：模拟面试+项目话术</div>';
+    return '<div class="tag tag-blue">📚 还有'+daysUntil+'天：刷题+复习项目</div>';
+}
+
+function removeInterview(i) {
+    interviews.splice(i, 1);
+    interviews.sort((a, b) => a.datetime - b.datetime);
+    document.getElementById('lockNotice').style.display = 'none';
+    renderSchedule();
+}
+</script>
+</body>
+</html>
